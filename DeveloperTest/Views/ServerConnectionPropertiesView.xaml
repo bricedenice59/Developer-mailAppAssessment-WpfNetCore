@@ -1,0 +1,133 @@
+﻿<UserControl x:Class="DeveloperTest.Views.ServerConnectionPropertiesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:command="clr-namespace:DeveloperTest.Utils.WPF.Components.Command"
+             xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+             xmlns:components="clr-namespace:DeveloperTest.Utils.WPF.Components"
+             xmlns:converters="clr-namespace:DeveloperTest.Utils.WPF.Converters"
+             xmlns:Behaviors="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:vm="clr-namespace:DeveloperTest.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="200" d:DesignWidth="800"
+             DataContext="{Binding ServerConnectionProperties, Source={StaticResource VMLocator}}"
+             md:DialogServiceViews.IsRegistered="True" >
+
+    <UserControl.Resources>
+        <ControlTemplate x:Key="ErrorTemplate">
+                <DockPanel LastChildFill="True">
+                    <Border BorderBrush="Red" BorderThickness="1">
+                        <AdornedElementPlaceholder />
+                    </Border>
+                </DockPanel>
+            </ControlTemplate>
+
+            <Style TargetType="TextBox">
+            <Style.Triggers>
+                <Trigger Property="Validation.HasError" Value="true">
+                    <Setter Property="ToolTip"
+                                Value="{Binding RelativeSource={x:Static RelativeSource.Self},Path=(Validation.Errors)[0].ErrorContent}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Behaviors:Interaction.Triggers>
+        <Behaviors:EventTrigger  EventName="Loaded">
+            <command:EventToCommand Command="{Binding OnLoadCommand}"/>
+        </Behaviors:EventTrigger >
+    </Behaviors:Interaction.Triggers>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Column="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition MinWidth="100" Width="Auto"/>
+                <ColumnDefinition Width="200"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Label Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"
+                   Content="Server type"/>
+            <Label Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"
+                   Content="Server"/>
+            <Label Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"  HorizontalAlignment="Left"
+                   Content="Port"/>
+            <ComboBox Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                      ItemsSource="{Binding Protocols}"
+                      SelectedValue="{Binding SelectedProtocol}" SelectedIndex="0">
+                <ComboBox.Resources>
+                    <converters:ProtocolNameConverter x:Key="ProtocolNameEnumConverter"/>
+                </ComboBox.Resources>
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Converter={StaticResource ProtocolNameEnumConverter}}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBox Text="{Binding ServerName, UpdateSourceTrigger=PropertyChanged}"
+                     Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+            <TextBox Text="{Binding Port, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, ValidatesOnExceptions=True}"
+                     Validation.ErrorTemplate="{StaticResource ErrorTemplate}"
+                     Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+
+            <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0,0,0"
+                        Visibility="{Binding IsProcessing, Converter={StaticResource Bool2VisibilityConverter}}">
+                <components:DoubleCircularProgressBar Width="30" Height="30" StrokeColor="Blue"/>
+                <TextBlock VerticalAlignment="Center" Margin="20,0,0,0" Text="{Binding MessageCurrentOperation}"></TextBlock>
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Column="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition MinWidth="100" Width="Auto"/>
+                <ColumnDefinition Width="200"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Label Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"
+                   Content="Encryption"/>
+            <Label Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left"
+                   Content="Username"/>
+            <Label Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"  HorizontalAlignment="Left"
+                   Content="Password"/>
+            <ComboBox ItemsSource="{Binding EncryptionTypes}"
+                      SelectedValue="{Binding SelectedEncryptionType}"
+                      Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" SelectedIndex="0">
+                <ComboBox.Resources>
+                    <converters:EncryptionTypeConverter x:Key="EncryptionTypeEnumConverter"/>
+                </ComboBox.Resources>
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Converter={StaticResource EncryptionTypeEnumConverter}}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                     Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+            <PasswordBox PasswordChar="*" PasswordChanged="OnPasswordChanged"
+                         Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+            <Button Command="{Binding ConnectServerAndDownloadEmailsCommand}"
+                    Grid.Row="3" Grid.Column="1" Content="Start" HorizontalAlignment="Right"
+                    VerticalAlignment="Center" Width="155" Height="36"/>
+        </Grid>
+
+
+
+    </Grid>
+</UserControl>
